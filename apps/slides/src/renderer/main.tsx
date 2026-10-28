@@ -5,7 +5,7 @@ import { App } from './App'
 import { AudienceView } from './components/AudienceView'
 import { LocaleProvider, setModuleLang } from './i18n/locale'
 import type { UiTheme } from '../shared/ipc'
-import '@genoffice/ui/tokens.css'
+import './tokens.css'
 import './styles.css'
 
 // Canvas fillText never triggers @font-face downloads, so the bundled document fonts
