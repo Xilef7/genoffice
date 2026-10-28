@@ -20,7 +20,6 @@
   "devDependencies": {
     "@genoffice/i18n": "*",
     "@genoffice/pptx-engine": "*",
-    "@genoffice/pptx-ops": "*",
     "@genoffice/pptx-render": "*",
     "@types/opentype.js": "^1.3.8",
     "@types/pngjs": "^6.0.5",

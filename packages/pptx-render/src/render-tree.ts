@@ -10,7 +10,7 @@
  * All geometry units = px (absolute target-canvas coordinates), with viewport
  * scale and nested group offsets already applied.
  */
-import type { Fill, Stroke } from '@genoffice/pptx-engine'
+import type { Fill, LinkTarget, Stroke } from '@genoffice/pptx-engine'
 import type { PlacedBox } from './coords'
 import type { ExtrusionRender } from './scene3d'
 
@@ -584,4 +584,4 @@ export interface RenderSlide {
 }
 
 // Convenience type re-exports (for internal render logic)
-export type { Fill, Stroke }
+export type { Fill, LinkTarget, Stroke }

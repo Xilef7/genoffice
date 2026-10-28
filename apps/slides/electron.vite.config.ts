@@ -29,9 +29,6 @@ const workspaceAlias = {
     '../../packages/pptx-engine/src/chart-workbook.ts',
   ),
   '@genoffice/pptx-engine': resolve(here, '../../packages/pptx-engine/src/index.ts'),
-  '@genoffice/pptx-ops/op-docs': resolve(here, '../../packages/pptx-ops/src/op-docs.ts'),
-  '@genoffice/pptx-ops/font-size': resolve(here, '../../packages/pptx-ops/src/font-size.ts'),
-  '@genoffice/pptx-ops': resolve(here, '../../packages/pptx-ops/src/index.ts'),
   '@genoffice/pptx-render/preset-geometry': resolve(
     here,
     '../../packages/pptx-render/src/preset-geometry.ts',
@@ -53,7 +50,6 @@ export default defineConfig({
       externalizeDepsPlugin({
         exclude: [
           '@genoffice/pptx-engine',
-          '@genoffice/pptx-ops',
           '@genoffice/pptx-render',
           '@genoffice/electron-utils',
           'opentype.js',

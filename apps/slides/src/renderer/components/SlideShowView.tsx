@@ -12,10 +12,9 @@
  * - Right-click opens PowerPoint's show menu (next/previous/last viewed/see all slides/screen/end)
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { RenderNode, RenderSlide, ShapeRenderNode } from '@genoffice/pptx-render'
+import type { LinkTarget, RenderNode, RenderSlide, ShapeRenderNode } from '@genoffice/pptx-render'
 import type {
   AnimationItem,
-  LinkTargetOp,
   ShapeKey,
   ShowTiming,
   TransitionKind,
@@ -117,9 +116,9 @@ export function SlideShowView({
   /** Per-page element Morph pairing keys (also prefetched once) */
   const keysRef = useRef<ShapeKey[][]>([])
   /** Per-page element hyperlinks (also prefetched once): sourceId → target; clicks hit-test against these */
-  const linksRef = useRef<Array<Map<string, LinkTargetOp>>>([])
+  const linksRef = useRef<Array<Map<string, LinkTarget>>>([])
   /** Per-page run hyperlinks: "sourceId:para:run" → target; hit-tested against layout glyph runs */
-  const runLinksRef = useRef<Array<Map<string, LinkTargetOp>>>([])
+  const runLinksRef = useRef<Array<Map<string, LinkTarget>>>([])
   /** Morph tween in progress: previous/target page original indexes + replay nonce */
   const [morph, setMorph] = useState<{ fromIdx: number; toIdx: number; nonce: number } | null>(null)
   /** How the current page was entered: forward = initial state playing step by step, others = all-finished state */
@@ -381,7 +380,7 @@ export function SlideShowView({
   // Element hyperlinks during the show (PowerPoint behavior): a click on a linked element follows
   // the link instead of advancing — slide links (Zoom/jump) go to that page, URLs open in the browser
   const followLink = useCallback(
-    (target: LinkTargetOp) => {
+    (target: LinkTarget) => {
       if (target.kind === 'slide') {
         const p = order.indexOf(target.slideIndex)
         // Hidden pages aren't in the play order; ignore jumps to them (matching the skip semantics)
@@ -426,7 +425,7 @@ export function SlideShowView({
   )
   /** Click/hover position → slide-model px → topmost linked element's target (null = no link there) */
   const linkAt = useCallback(
-    (e: React.MouseEvent<HTMLElement>): LinkTargetOp | null => {
+    (e: React.MouseEvent<HTMLElement>): LinkTarget | null => {
       const cur = order[pos]
       const links = (cur != null ? linksRef.current[cur] : undefined) ?? new Map()
       const runLinks = (cur != null ? runLinksRef.current[cur] : undefined) ?? new Map()
@@ -670,9 +669,9 @@ function hitLink(
   nodes: RenderNode[],
   x: number,
   y: number,
-  links: Map<string, LinkTargetOp>,
-  runLinks: Map<string, LinkTargetOp>,
-): LinkTargetOp | null {
+  links: Map<string, LinkTarget>,
+  runLinks: Map<string, LinkTarget>,
+): LinkTarget | null {
   for (let i = nodes.length - 1; i >= 0; i--) {
     const n = nodes[i]!
     const { box } = n

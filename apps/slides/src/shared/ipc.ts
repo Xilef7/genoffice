@@ -7,12 +7,9 @@
  * renderer sends edit intents (text/geometry changes) back to the main process, which applies
  * them to the model and rebuilds the RenderSlide.
  */
-import type { RenderSlide } from '@genoffice/pptx-render'
+import type { LinkTarget, RenderSlide } from '@genoffice/pptx-render'
 // the font catalog's shape is the store's to declare, not a copy kept in step by hand
 import type { CatalogEntry as FontCatalogEntry } from '@genoffice/electron-utils/font-store'
-import type { LinkTargetOp } from '@genoffice/pptx-ops'
-
-export type { LinkTargetOp }
 
 export type UiTheme = 'light' | 'dark' | 'system'
 
@@ -184,12 +181,12 @@ export interface SlidesApi {
     sourceId: string,
   ) => Promise<{ kind: 'video' | 'audio'; dataUrl: string } | null>
   /** All element hyperlinks on a slide (groups included) — slideshow click hit-testing */
-  getSlideLinks: (slideIndex: number) => Promise<Array<{ sourceId: string; target: LinkTargetOp }>>
+  getSlideLinks: (slideIndex: number) => Promise<Array<{ sourceId: string; target: LinkTarget }>>
   /** Run-level hyperlinks on a slide (resolved live); keyed by element + paragraph + run indexes */
   getRunLinks: (
     slideIndex: number,
   ) => Promise<
-    Array<{ sourceId: string; paraIndex: number; runIndex: number; target: LinkTargetOp }>
+    Array<{ sourceId: string; paraIndex: number; runIndex: number; target: LinkTarget }>
   >
   /** The current page's transition effect (echoed on page switch) */
   getTransition: (slideIndex: number) => Promise<TransitionKind>
