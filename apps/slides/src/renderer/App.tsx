@@ -5,16 +5,10 @@ import type {
   RenderSlide,
 } from '@genoffice/pptx-render'
 import { baseName } from '../shared/base-name'
-import { ZOOM_PREVIEW_EVENT } from './zoom-preview'
-import { clampZoom, notchStep } from './zoom-steps'
 import { createImageLoader } from './image-loader'
 import { syncPrivateFonts } from './doc-fonts'
 import { SlideShowView } from './components/SlideShowView'
 import { PresenterView } from './components/PresenterView'
-import {
-  createWheelPager,
-  createZoomWheelClassifier,
-} from '@genoffice/ui'
 import { showToast } from './components/toast-bus'
 import { t } from './i18n/locale'
 import type {
@@ -85,10 +79,6 @@ export function App() {
   /** Latest-state bundle for the extracted action modules; refreshed every render (see action-context.ts). */
   const ctxRef = useRef<ActionCtx>(null as unknown as ActionCtx)
   const [zoom, setZoom] = useState(1)
-  /** unscaled layout size of .stage-scale — its transform-scaled visual size is
-   * scaleBox * zoom, which the wrapper zoom-box adopts so scrolling can reach it all */
-  const stageScaleRef = useRef<HTMLDivElement | null>(null)
-  const zoomBoxRef = useRef<HTMLDivElement | null>(null)
   const [status, setStatus] = useState('')
   // Status messages auto-dismiss after 4s: operation feedback needs only a brief showing; persistent info (page number/file name) lives on the left and in the title bar
   useEffect(() => {
@@ -287,126 +277,6 @@ export function App() {
       }),
     [],
   )
-
-  // Zoom preview shared by trackpad pinch and the status-bar slider: a setZoom per event
-  // re-renders the whole App (thumbnails included) dozens of times per gesture and froze
-  // the pinch for seconds; instead the gesture only touches the CSS transform (rAF-batched)
-  // and the state commit is debounced to the gesture's end.
-  const zoomGestureRef = useRef<{
-    raf: number
-    timer: number
-    pending: number | null
-    anchor: { x: number; y: number } | null
-  }>({
-    raf: 0,
-    timer: 0,
-    pending: null,
-    anchor: null,
-  })
-  /** `next` may be a functional updater (based on the pending gesture value, so rapid
-   * steps compound correctly). `anchor` (client coords) is the screen point the zoom
-   * pivots around — the cursor for wheel/pinch; defaults to the viewport center. */
-  const previewZoom = useCallback(
-    (next: number | ((current: number) => number), anchor?: { x: number; y: number }) => {
-      const g = zoomGestureRef.current
-      const target = typeof next === 'function' ? next(g.pending ?? zoomLiveRef.current) : next
-      g.pending = clampZoom(target)
-      g.anchor = anchor ?? null
-      if (!g.raf) {
-        g.raf = requestAnimationFrame(() => {
-          g.raf = 0
-          const scaleEl = stageScaleRef.current
-          if (g.pending == null || !scaleEl) return
-          const wrap = stageWrapRef.current
-          // Content point (unscaled coords) currently under the anchor, measured from the
-          // applied transform itself so it stays correct regardless of commit timing
-          let ax = 0
-          let ay = 0
-          let px = 0
-          let py = 0
-          if (wrap) {
-            const wr = wrap.getBoundingClientRect()
-            ax = anchorClamp(g.anchor?.x, wr.left, wr.right) ?? wr.left + wr.width / 2
-            ay = anchorClamp(g.anchor?.y, wr.top, wr.bottom) ?? wr.top + wr.height / 2
-            const r = scaleEl.getBoundingClientRect()
-            const applied = scaleEl.offsetWidth ? r.width / scaleEl.offsetWidth : 1
-            px = (ax - r.left) / applied
-            py = (ay - r.top) / applied
-          }
-          scaleEl.style.transform = `scale(${g.pending})`
-          const box = zoomBoxRef.current
-          if (box) {
-            // offsetWidth ignores the transform = unscaled layout size (same basis as scaleBox)
-            box.style.width = `${scaleEl.offsetWidth * g.pending}px`
-            box.style.height = `${scaleEl.offsetHeight * g.pending}px`
-          }
-          // Scroll so the anchored content point stays under the anchor (the browser
-          // clamps at the scroll edges; while the content still fits it stays centered)
-          if (wrap) {
-            const r = scaleEl.getBoundingClientRect()
-            wrap.scrollLeft += px * g.pending - (ax - r.left)
-            wrap.scrollTop += py * g.pending - (ay - r.top)
-            // At/below fit the anchoring must not win over centering: the bleed's
-            // scroll range would keep the offset alive after overflow turns hidden
-            resetFitScroll(g.pending)
-          }
-          // Selection chrome counter-scales per frame so it holds a constant on-screen size
-          window.dispatchEvent(new CustomEvent(ZOOM_PREVIEW_EVENT, { detail: g.pending }))
-        })
-      }
-      window.clearTimeout(g.timer)
-      g.timer = window.setTimeout(() => {
-        if (g.pending == null) return
-        setZoom(g.pending)
-        // The commit may not change `zoom` (gesture ended where it started), so the
-        // layout-effect reset would not re-run; clear any residue here as well
-        resetFitScroll(g.pending)
-        g.pending = null
-        g.anchor = null
-      }, 150)
-    },
-    [resetFitScroll],
-  )
-  useEffect(() => {
-    const g = zoomGestureRef.current
-    return () => {
-      cancelAnimationFrame(g.raf)
-      window.clearTimeout(g.timer)
-    }
-  }, [])
-
-  // Trackpad pinch zoom: Chromium synthesizes pinch gestures as ctrlKey+wheel events;
-  // Ctrl/⌘ + wheel zoom also supported. Needs passive:false to preventDefault.
-  // Plain wheel/trackpad scroll turns pages (PowerPoint/WPS behavior) — but only
-  // while the slide fits the viewport; zoomed-in overflow keeps native panning.
-  useEffect(() => {
-    const el = stageWrapRef.current
-    if (!el) return
-    const pager = createWheelPager()
-    const zoomWheel = createZoomWheelClassifier()
-    const onWheel = (ev: WheelEvent) => {
-      if (ev.ctrlKey || ev.metaKey) {
-        ev.preventDefault()
-        const intent = zoomWheel.feed(ev, ev.timeStamp)
-        if (!intent) return
-        const anchor = { x: ev.clientX, y: ev.clientY }
-        if (intent === 'pinch') {
-          const factor = Math.exp(-ev.deltaY * 0.01)
-          previewZoom((z) => z * factor, anchor)
-        } else {
-          const dir = intent === 'zoom-in' ? 1 : -1
-          previewZoom((z) => notchStep(z, dir), anchor)
-        }
-        return
-      }
-      const fits = zoomLiveRef.current <= rawFitRef.current(slideLiveRef.current) + 0.001
-      if (!fits) return
-      const flip = pager.feed(ev.deltaY, ev.timeStamp)
-      if (flip) setCurrent((c) => Math.min(Math.max(c + flip, 0), slides.length - 1))
-    }
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [hasDoc, previewZoom, slides.length])
 
   const newBlank = useCallback(async () => {
     const r = await window.slidesApi.newBlank(FIT_WIDTH)
