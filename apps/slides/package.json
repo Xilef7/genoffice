@@ -22,7 +22,6 @@
     "@genoffice/pptx-engine": "*",
     "@genoffice/pptx-ops": "*",
     "@genoffice/pptx-render": "*",
-    "@genoffice/ui": "*",
     "@types/opentype.js": "^1.3.8",
     "@types/pngjs": "^6.0.5",
     "@types/react": "^19.2.14",

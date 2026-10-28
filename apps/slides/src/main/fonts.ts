@@ -37,10 +37,10 @@ import {
   type ShapedPrefFace,
   gtMeasure,
 } from './shaped-metrics'
-import carlitoRegular from '@genoffice/ui/fonts/Carlito-Regular.ttf?asset'
-import carlitoBold from '@genoffice/ui/fonts/Carlito-Bold.ttf?asset'
-import carlitoItalic from '@genoffice/ui/fonts/Carlito-Italic.ttf?asset'
-import carlitoBoldItalic from '@genoffice/ui/fonts/Carlito-BoldItalic.ttf?asset'
+import carlitoRegular from '../shared/fonts/Carlito-Regular.ttf?asset'
+import carlitoBold from '../shared/fonts/Carlito-Bold.ttf?asset'
+import carlitoItalic from '../shared/fonts/Carlito-Italic.ttf?asset'
+import carlitoBoldItalic from '../shared/fonts/Carlito-BoldItalic.ttf?asset'
 
 /** Fonts shipped with the app (metric substitutes for fonts most decks assume, e.g. Calibri→Carlito). */
 const BUNDLED_FONTS: Record<string, string> = {
