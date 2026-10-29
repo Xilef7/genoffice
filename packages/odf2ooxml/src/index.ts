@@ -6,6 +6,5 @@
  * `dropped` instead of approximated into wrong markup.
  */
 
-export { convertOdtToDocx, OdfConvertError, type OdtToDocxResult } from './odt-docx'
 export { convertOdpToPptx, type OdpToPptxResult } from './odp-pptx'
 export { MAX_ODF_PART_BYTES } from './odf'
