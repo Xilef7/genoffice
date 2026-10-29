@@ -20,7 +20,7 @@ import {
   type Paragraph,
   type Slide,
   type TextRun,
-} from '../../pptx-engine/src/index'
+} from '@genoffice/pptx-engine'
 import type { OdfPackage } from './odf'
 import { childElements, loadOdfPackage, odfBody } from './odf'
 import { OdfConvertError } from './odt-docx'
