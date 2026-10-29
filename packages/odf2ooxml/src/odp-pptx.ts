@@ -22,8 +22,7 @@ import {
   type TextRun,
 } from '@genoffice/pptx-engine'
 import type { OdfPackage } from './odf'
-import { childElements, loadOdfPackage, odfBody } from './odf'
-import { OdfConvertError } from './odt-docx'
+import { OdfConvertError, childElements, loadOdfPackage, odfBody } from './odf'
 import { OdfStyles } from './styles'
 import {
   Drops,
