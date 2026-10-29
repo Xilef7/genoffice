@@ -25,7 +25,7 @@ import {
   registerRendererScheme,
   rendererUrl,
 } from '@genoffice/electron-utils'
-import { convertOdpToPptx } from '../../../../packages/odf2ooxml/src'
+import { convertOdpToPptx } from '@genoffice/odf2ooxml'
 import { getUiLang, normalizeLang, setUiLang } from '@genoffice/i18n'
 import {
   getElementLink,
