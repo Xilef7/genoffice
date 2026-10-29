@@ -14,6 +14,7 @@ const workspaceAlias = {
     '../../packages/pptx-engine/src/table-grid.ts',
   ),
   '@genoffice/pptx-engine/identity': resolve(here, '../../packages/pptx-engine/src/identity.ts'),
+  '@genoffice/pptx-engine/metafile': resolve(here, '../../packages/pptx-engine/src/metafile.ts'),
   '@genoffice/pptx-engine/named-action': resolve(
     here,
     '../../packages/pptx-engine/src/named-action.ts',
