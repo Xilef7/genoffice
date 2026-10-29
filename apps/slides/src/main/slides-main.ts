@@ -190,8 +190,6 @@ async function openAndBuild(
     path,
     opened,
     fitWidthPx,
-    undoStack: [],
-    redoStack: [],
   })
   let slides = buildAllRenderSlides(opened, fitWidthPx)
   // If the first layout pass had complex-script misses (Arabic/Thai etc.), re-lay out once with renderer-measured widths
@@ -339,7 +337,7 @@ export function registerSlidesIpc(): void {
 
   ipcMain.handle('slides:new-blank', async (e, fitWidthPx: number): Promise<OpenResult> => {
     const opened = await openPptx(await createBlankPptx())
-    sessions.set(e.sender.id, { path: '', opened, fitWidthPx, undoStack: [], redoStack: [] })
+    sessions.set(e.sender.id, { path: '', opened, fitWidthPx })
     return {
       path: '',
       slides: buildAllRenderSlides(opened, fitWidthPx),
