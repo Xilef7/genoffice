@@ -17,9 +17,6 @@ import { readFile, open } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import {
-  contextMenuLabels,
-  installContextMenu,
-  installNavigationGuard,
   showOpenDialogWithMemory,
   installRendererProtocol,
   registerRendererScheme,
@@ -587,8 +584,6 @@ export function createSlidesWindow(openPath?: string | null): BrowserWindow {
 
 export function startSlidesStandalone(): void {
   registerRendererScheme()
-  installNavigationGuard(app)
-  installContextMenu(app, () => contextMenuLabels(getUiLang()))
 
   if (!app.requestSingleInstanceLock()) {
     app.quit()
