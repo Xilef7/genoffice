@@ -29,14 +29,7 @@ import {
 } from '@genoffice/pptx-render'
 import { classifyCjkScript, classifyCjkScriptByNameScript } from '../shared/cjk-script'
 import { scanFontDirs, type ScanTask } from './font-scan'
-import {
-  initShapedMetrics,
-  shapedMeasure,
-  shapedFamily,
-  complexScriptOf,
-  type ShapedPrefFace,
-  gtMeasure,
-} from './shaped-metrics'
+import { gtMeasure } from './shaped-metrics'
 import carlitoRegular from '../shared/fonts/Carlito-Regular.ttf?asset'
 import carlitoBold from '../shared/fonts/Carlito-Bold.ttf?asset'
 import carlitoItalic from '../shared/fonts/Carlito-Italic.ttf?asset'
@@ -1070,7 +1063,6 @@ export function fontFileFamilies(path: string): string[] {
 
 /** Create a metrics provider injected with system fonts (falls back to heuristics per run when no font is found). */
 export function createSystemFontMetrics(): FontMetricsProvider {
-  initShapedMetrics()
   const registry = getRegistry()
   const cache = new Map<
     string,
@@ -1267,41 +1259,12 @@ export function createSystemFontMetrics(): FontMetricsProvider {
     delete next.substScript
     return next
   }
-  // Complex-script runs whose REQUESTED family resolved to a real (non-substituted)
-  // face shape and draw with that face — decks ship real Arabic fonts via Office
-  // CloudFonts/DFonts/embeds, and forcing the generic script substitute (Geeza Pro)
-  // makes every run ~20% wider than PowerPoint (prod_016). Substituted resolutions
-  // keep the script default so measuring and drawing stay on one font.
-  const prefFaceFor = (style: RunStyle, text: string): ShapedPrefFace | undefined => {
-    if (!complexScriptOf(text)) return undefined
-    const e = resolveEntry(style)
-    if (!e || e.substituted) return undefined
-    const { family, path, offset } = e
-    return {
-      family,
-      bytes: () => {
-        try {
-          return extractFace(readFileSync(path), offset)
-        } catch {
-          return null
-        }
-      },
-    }
-  }
   const provider: FontMetricsProvider = {
     metrics: (style) => inner.metrics(style),
     // Complex scripts (ligatures/contextual forms) prefer HarfBuzz shaped metrics — opentype's
     // per-glyph accumulation measures isolated forms, drifting from actual drawing; falls back
     // to the original path when not ready or no font
     measure: (text, style) => {
-      const shaped = shapedMeasure(
-        text,
-        style.fontSizePx,
-        style.bold,
-        style.italic,
-        prefFaceFor(style, text),
-      )
-      if (shaped != null) return shaped
       // Private faces (cloud/DFonts/embeds: FontFace registration can land on a sibling
       // style file of the same family) and variable fonts (instancing drift): opentype
       // advances run a few percent off Chromium's rendering, visually swallowing word
@@ -1319,13 +1282,7 @@ export function createSystemFontMetrics(): FontMetricsProvider {
     displayFamily: (style, text) => {
       const fb = text != null ? scriptFallbackFor(text, resolveEntry(style), style) : undefined
       if (fb) return resolveEntry(withFallback(style, fb))?.family ?? fb
-      return (
-        (text != null
-          ? shapedFamily(text, prefFaceFor(style, text), style.bold, style.italic)
-          : null) ??
-        resolveEntry(style)?.family ??
-        style.fontFamily
-      )
+      return resolveEntry(style)?.family ?? style.fontFamily
     },
     substituted: (style) => resolveEntry(style)?.substituted === true,
   }
