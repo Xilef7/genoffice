@@ -43,7 +43,7 @@ import {
 // From its own electron-utils subpath rather than the package barrel: the
 // barrel drags Electron-only modules into headless bundles.
 import { atomicWriteFile } from '@genoffice/electron-utils/atomic-write'
-import { refineComplexWidths, shapedMetricsReady } from './shaped-metrics'
+import { refineComplexWidths } from './shaped-metrics'
 import { cfbKind, isCfbHeader } from './cfb-sniff'
 import { OPENABLE_DECK_EXTENSIONS, deckExtension } from '../shared/deck-open-formats'
 import type {
@@ -183,7 +183,6 @@ async function openAndBuild(
   // a 0-byte .pptx is an empty deck, not a corrupt one: open the blank template
   // under the file's own path so Save writes back to it
   const bytes = raw.length === 0 ? await createBlankPptx() : new Uint8Array(raw)
-  await shapedMetricsReady() // Lay out only after complex-script shaped metrics are ready, avoiding an init race falling back to estimation
   const opened = await openPptx(bytes)
   adoptEmbeddedFonts(opened)
   sessions.set(wc.id, {
